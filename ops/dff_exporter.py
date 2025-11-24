@@ -28,9 +28,17 @@ from .col_exporter import export_col
 
 #######################################################
 def clear_extension(string):
-    
     k = string.rfind('.')
-    return string if k < 0 else string[:k]
+    if k < 0:
+        return string
+
+    ext = string[k+1:].lower()
+    # Only treat it as an extension if it's a known image type
+    if ext in ("png", "jpg", "jpeg", "bmp", "tga", "dds", "tif", "tiff"):
+        return string[:k]
+
+    # No known extension, so we leave the name as is
+    return string
     
 #######################################################
 class material_helper:
