@@ -18,7 +18,6 @@ import bpy
 import bmesh
 import mathutils
 
-from bpy_extras import anim_utils
 from collections import OrderedDict
 
 from ..gtaLib import dff
@@ -28,17 +27,21 @@ from .col_exporter import export_col
 
 #######################################################
 def clear_extension(string):
-    k = string.rfind('.')
-    if k < 0:
+    if dff_exporter.preserve_unknown_exts:
+        k = string.rfind('.')
+        if k < 0:
+            return string
+
+        ext = string[k+1:].lower()
+        # Only treat it as an extension if it's a known image type
+        if ext in ("png", "jpg", "jpeg", "bmp", "tga", "dds", "tif", "tiff"):
+            return string[:k]
+
+        # No known extension, so we leave the name as is
         return string
-
-    ext = string[k+1:].lower()
-    # Only treat it as an extension if it's a known image type
-    if ext in ("png", "jpg", "jpeg", "bmp", "tga", "dds", "tif", "tiff"):
-        return string[:k]
-
-    # No known extension, so we leave the name as is
-    return string
+    
+    k = string.rfind('.')
+    return string if k < 0 else string[:k]
     
 #######################################################
 class material_helper:
@@ -210,23 +213,6 @@ class material_helper:
         if not anim_data:
             return None
 
-        # Check if action exists
-        action = anim_data.action
-        if not action:
-            return None
-
-        if bpy.app.version < (4, 4, 0):
-            action_fcurves = action.fcurves
-
-        else:
-            # Check if action slot exists
-            action_slot = anim_data.action_slot
-            if not action_slot:
-                return None
-
-            channelbag = anim_utils.action_get_channelbag_for_slot(action, action_slot)
-            action_fcurves = channelbag.fcurves
-
         fps = bpy.context.scene.render.fps
 
         anim = dff.UVAnim()
@@ -250,7 +236,7 @@ class material_helper:
         }
 
         # Set keyframes_dict
-        for curve in action_fcurves:
+        for curve in anim_data.action.fcurves:
 
             # Rw doesn't support Z texture coordinate.
             if curve.array_index > 1:
@@ -412,6 +398,7 @@ class dff_exporter:
     mass_export = False
     preserve_positions = True
     preserve_rotations = True
+    preserve_unknown_exts = True
     file_name = ""
     dff = None
     version = None
@@ -1244,6 +1231,7 @@ def export_dff(options):
     dff_exporter.mass_export        = options['mass_export']
     dff_exporter.preserve_positions = options['preserve_positions']
     dff_exporter.preserve_rotations = options['preserve_rotations']
+    dff_exporter.preserve_unknown_exts = options['preserve_unknown_exts']
     dff_exporter.path               = options['directory']
     dff_exporter.version            = options['version']
     dff_exporter.export_coll        = options['export_coll']
