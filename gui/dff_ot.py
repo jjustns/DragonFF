@@ -65,7 +65,6 @@ class EXPORT_OT_dff(bpy.types.Operator, ExportHelper):
         name            = "Only Selected",
         default         = False
     )
-    
     preserve_positions  : bpy.props.BoolProperty(
         name            = "Preserve Positions",
         description     = "Don't set object positions to (0,0,0)",
@@ -75,6 +74,12 @@ class EXPORT_OT_dff(bpy.types.Operator, ExportHelper):
     preserve_rotations  : bpy.props.BoolProperty(
         name            = "Preserve Rotations",
         description     = "Don't set object rotations to (0,0,0)",
+        default         = False
+    )
+
+    preserve_unknown_exts  : bpy.props.BoolProperty(
+        name            = "Preserve Unknown Extensions",
+        description     = "Do not strip anything after '.' unless it's a known extension type (png, jpg, jpeg, bmp, tga, dds, tif, tiff)",
         default         = False
     )
 
@@ -127,10 +132,10 @@ class EXPORT_OT_dff(bpy.types.Operator, ExportHelper):
 
                 box.prop(self, "preserve_positions")
                 box.prop(self, "preserve_rotations")
-
         else:
             layout.prop(self, "preserve_positions")
             layout.prop(self, "preserve_rotations")
+            
 
         layout.prop(self, "only_selected")
 
@@ -142,6 +147,7 @@ class EXPORT_OT_dff(bpy.types.Operator, ExportHelper):
 
         layout.prop(self, "export_frame_names")
         layout.prop(self, "exclude_geo_faces")
+        layout.prop(self, "preserve_unknown_exts")
         layout.prop(self, "export_version")
 
         if self.export_version == 'custom':
@@ -189,6 +195,7 @@ class EXPORT_OT_dff(bpy.types.Operator, ExportHelper):
                     "mass_export"        : False if self.from_outliner else self.mass_export,
                     "preserve_positions" : preserve_positions,
                     "preserve_rotations" : preserve_rotations,
+                    "preserve_unknown_exts" : self.preserve_unknown_exts,
                     "version"            : self.get_selected_rw_version(),
                     "export_coll"        : self.export_coll,
                     "coll_ext_type"      : int(self.coll_ext_type),
