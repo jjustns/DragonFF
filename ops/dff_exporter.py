@@ -26,11 +26,25 @@ from ..ops.ext_2dfx_exporter import ext_2dfx_exporter
 from ..ops.state import State
 from .col_exporter import export_col
 
+IMAGE_EXTS = {"png", "jpg", "jpeg", "bmp", "tga", "dds", "tif", "tiff"}
+
 #######################################################
-def clear_extension(string):
-    
+def clear_extension(string, valid_exts=None):
+
     k = string.rfind('.')
-    return string if k < 0 else string[:k]
+
+    if not valid_exts:
+        return string if k < 0 else string[:k]
+
+    if k < 0:
+        return string
+
+    ext = string[k+1:].lower()
+
+    if ext in valid_exts:
+        return string[:k]
+
+    return string
     
 #######################################################
 class material_helper:
@@ -70,7 +84,7 @@ class material_helper:
                 texture.name = clear_extension(
                     node_label
                     if node_label in image_name and node_label != ""
-                    else image_name
+                    else image_name, IMAGE_EXTS
                 )
                 return texture
             return None
@@ -78,7 +92,7 @@ class material_helper:
         # Blender Internal
         try:
             texture.name = clear_extension(
-                self.material.texture_slots[0].texture.image.name
+                self.material.texture_slots[0].texture.image.name, IMAGE_EXTS
             )
             return texture
 
@@ -123,7 +137,7 @@ class material_helper:
                 bump_texture.name = clear_extension(
                     node_label
                     if node_label in image_name and node_label != ""
-                    else image_name
+                    else image_name, IMAGE_EXTS
                 )
                 intensity = self.principled.normalmap_strength
 
@@ -444,7 +458,7 @@ class dff_exporter:
         # Get rid of everything before the last period
         if self.export_frame_names:
             if is_bone or obj.dff.export_frame_name:
-                frame.name = clear_extension(obj.name)
+                frame.name = clear_extension(obj.name, IMAGE_EXTS)
 
         matrix = matrix_local or obj.matrix_local
         if is_bone and obj.parent is not None:
